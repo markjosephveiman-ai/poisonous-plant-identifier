@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Poisonous Plant Identifier</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f2e12;
+  color: white;
+  overflow-x: hidden;
+}
+.screen {
+  display: none;
+  padding: 20px;
+  animation: fadeIn 0.4s ease;
+}
+.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  background: #1b5e20;
+  border: none;
+  color: white;
+  font-size: 18px;
+  border-radius: 10px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+button:hover { background: #2e7d32; }
+
+.back-btn {
+  background: #004d40;
+}
+.back-btn:hover {
+  background: #00695c;
+}
+
+.plant-card {
+  display: flex;
+  align-items: center;
+  background: #154d19;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.plant-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 15px;
+}
+
+#plantImage {
+  width: 100%;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+.info-box {
+  background: #154d19;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="homeScreen" class="screen active">
+  <h1 style="text-align:center;">Poisonous Plant Identifier</h1>
+  <button id="browseBtn">Browse Plants</button>
+</div>
+
+<div id="browseScreen" class="screen">
+  <h2>Browse Plants</h2>
+  <input type="text" id="searchBar" placeholder="Search plant..." />
+  <div id="plantList"></div>
+  <button class="back-btn" onclick="goHome()">Back</button>
+</div>
+
+<div id="detailsScreen" class="screen">
+  <h2 id="plantName"></h2>
+  <img id="plantImage">
+  <div class="info-box"><b>Information:</b><p id="plantInfo"></p></div>
+  <div class="info-box"><b>Toxic Parts:</b><p id="plantToxic"></p></div>
+  <div class="info-box"><b>Effects:</b><p id="plantEffects"></p></div>
+  <div class="info-box"><b>First Aid:</b><p id="plantAid"></p></div>
+  <button class="back-btn" onclick="goBrowse()">Back</button>
+</div>
+
+<script>
+// OFFLINE PLACEHOLDER IMAGE (Base64)
+const offlineImage =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABYUlEQVR4Xu3XsQ3CMBAF0Zf0/5cN0FDUFxIr05oig3NbS1RyCBj3TDI7kKIhxCB3sI5Gucs5cjoxOYD65gis6pZeRAEIJ5zsxFrqAKeCzjuY4xXHzkwmo7aX6ixkmKuuNHYsYAGP82LPgAvFp8ZUBKbjsggD4HXBJgp7wa9u0JPFsKnzGWxZmf0RduCMsZ/HXXAUPI0Ck1vZEBtcHTAr3e8DqgHMoXAg/P6MqxsVXni4eWh05rq6ArtyTcidH8333AdxAi8uKXu95ACnHCqB6fINVi6zkRgZNpmjDoE7YQDdyCjTiMQuuLHfoalGoVYBoNvKcJsteUmsDWUpAJZKkd06Pq4jG3Ejj6inUeJ8V+RaHcRUW2KIiMzFxLpy0X58F3RrgPf63HgNbUsVTNff7kwh28ykVfoCkb0N7dxyzKkAAAAASUVORK5CYII=";
+
+// PLANT DATABASE (OFFLINE)
+const plants = [
+  { name:"Oleander", image:offlineImage, info:"Extremely poisonous ornamental plant.", toxic:"All parts.", effects:"Heart problems, fatal.", aid:"Seek medical help." },
+  { name:"Angel's Trumpet", image:offlineImage, info:"Contains toxic alkaloids.", toxic:"Flowers, leaves.", effects:"Hallucinations.", aid:"Go to hospital." },
+  { name:"Dieffenbachia", image:offlineImage, info:"Indoor plant toxicity.", toxic:"Leaves.", effects:"Mouth irritation.", aid:"Rinse mouth." },
+  { name:"Rosary Pea", image:offlineImage, info:"Deadly seeds.", toxic:"Seeds.", effects:"Organ failure.", aid:"Emergency treatment." },
+  { name:"Castor Bean", image:offlineImage, info:"Produces ricin.", toxic:"Seeds.", effects:"Severe poisoning.", aid:"Immediate help." }
+];
+
+// SCREEN CONTROL
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+document.getElementById("browseBtn").onclick=()=>{
+  loadPlants();
+  showScreen("browseScreen");
+};
+
+function goHome(){ showScreen("homeScreen"); }
+function goBrowse(){ showScreen("browseScreen"); }
+
+function loadPlants(){
+  const list=document.getElementById("plantList");
+  list.innerHTML="";
+  plants.forEach((p,i)=>{
+    const card=document.createElement("div");
+    card.className="plant-card";
+    card.onclick=()=>showDetails(i);
+    card.innerHTML=`<img src="${p.image}"><h3>${p.name}</h3>`;
+    list.appendChild(card);
+  });
+}
+
+document.getElementById("searchBar").addEventListener("input",function(){
+  const v=this.value.toLowerCase();
+  const list=document.getElementById("plantList");
+  list.innerHTML="";
+  plants.filter(p=>p.name.toLowerCase().includes(v))
+    .forEach(p=>{
+      const card=document.createElement("div");
+      card.className="plant-card";
+      card.onclick=()=>showDetails(plants.indexOf(p));
+      card.innerHTML=`<img src="${p.image}"><h3>${p.name}</h3>`;
+      list.appendChild(card);
+    });
+});
+
+function showDetails(i){
+  const p=plants[i];
+  plantName.textContent=p.name;
+  plantImage.src=p.image;
+  plantInfo.textContent=p.info;
+  plantToxic.textContent=p.toxic;
+  plantEffects.textContent=p.effects;
+  plantAid.textContent=p.aid;
+  showScreen("detailsScreen");
+}
+</script>
+
+</body>
+</html>
