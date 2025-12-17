@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Poisonous Plant Identifier</title>
+
+<style>
+/* ========== GLOBAL STYLE ========== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f2e12;
+  color: white;
+  overflow-x: hidden;
+}
+
+.screen {
+  display: none;
+  padding: 20px;
+  animation: fadeIn 0.4s ease;
+}
+
+.active {
+  display: block;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== BUTTONS ========== */
+button {
+  width: 100%;
+  padding: 15px;
+  background: #1b5e20;
+  border: none;
+  color: white;
+  font-size: 18px;
+  border-radius: 10px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover {
+  background: #2e7d32;
+}
+
+/* Back button */
+.back-btn {
+  background: #004d40;
+}
+.back-btn:hover {
+  background: #00695c;
+}
+
+/* ========== PLANT GRID ========== */
+#plantList {
+  margin-top: 15px;
+}
+
+.plant-card {
+  display: flex;
+  align-items: center;
+  background: #154d19;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.plant-card:hover {
+  background: #1d6724;
+}
+
+.plant-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+/* ========== SEARCH BAR ========== */
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 15px;
+}
+
+/* ========== PLANT DETAILS ========== */
+#plantImage {
+  width: 100%;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+.info-box {
+  background: #154d19;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+/* No results message */
+#noResults {
+  text-align: center;
+  color: #ccc;
+  margin-top: 20px;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="homeScreen" class="screen active">
+  <h1 style="text-align:center;">Poisonous Plant Identifier</h1>
+  <button id="browseBtn">Browse Plants</button>
+</div>
+
+<!-- ========== BROWSE SCREEN ========== -->
+<div id="browseScreen" class="screen">
+  <h2>Browse Plants</h2>
+  <input type="text" id="searchBar" placeholder="Search plant..." />
+
+  <div id="plantList"></div>
+  <div id="noResults">No plants found matching your search.</div>
+
+  <button class="back-btn" onclick="goHome()">Back</button>
+</div>
+
+<!-- ========== DETAILS SCREEN ========== -->
+<div id="detailsScreen" class="screen">
+  <h2 id="plantName"></h2>
+  <img id="plantImage" src="" alt="Image of the selected poisonous plant" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABYUlEQVR4Xu3XsQ3CMBAF0Zf0/5cN0FDUFxIr05oig3NbS1RyCBj3TDI7kKIhxCB3sI5Gucs5cjoxOYD65gis6pZeRAEIJ5zsxFrqAKeCzjuY4xXHzkwmo7aX6ixkmKuuNHYsYAGP82LPgAvFp8ZUBKbjsggD4HXBJgp7wa9u0JPFsKnzGWxZmf0RduCMsZ/HXXAUPI0Ck1vZEBtcHTAr3e8DqgHMoXAg/P6MqxsVXni4eWh05rq6ArtyTcidH8333AdxAi8uKXu95ACnHCqB6fINVi6zkRgZNpmjDoE7YQDdyCjTiMQuuLHfoalGoVYBoNvKcJsteUmsDWUpAJZKkd06Pq4jG3Ejj6inUeJ8V+RaHcRUW2KIiMzFxLpy0X58F3RrgPf63HgNbUsVTNff7kwh28ykVfoCkb0N7dxyzKkAAAAASUVORK5CYII=';">
+
+  <div class="info-box">
+    <b>Information:</b>
+    <p id="plantInfo"></p>
+  </div>
+
+  <div class="info-box">
+    <b>Toxic Parts:</b>
+    <p id="plantToxic"></p>
+  </div>
+
+  <div class="info-box">
+    <b>Effects:</b>
+    <p id="plantEffects"></p>
+  </div>
+
+  <div class="info-box">
+    <b>First Aid:</b>
+    <p id="plantAid"></p>
+  </div>
+
+  <button class="back-btn" onclick="goBrowse()">Back</button>
+</div>
+
+<script>
+/* ========== PLANT DATABASE ========== */
+const plants = [
+  {
+    name: "Oleander",
+    image: "https://i.pinimg.com/1200x/3f/57/ac/3f57ac09f67b02dbd668e4c9fa588aeb.jpg",
+    info: "Beautiful but extremely poisonous ornamental plant.",
+    toxic: "All parts (leaves, flowers, stems, sap).",
+    effects: "Nausea, vomiting, irregular heartbeat. Can be fatal.",
+    aid: "Seek medical help. Do NOT induce vomiting. Rinse mouth."
+  },
+  {
+    name: "Angel's Trumpet",
+    image: "https://i.pinimg.com/736x/cb/56/a2/cb56a2eb2646d9fbcc317a3a53e94a03.jpg",
+    info: "A fragrant plant containing tropane alkaloids.",
+    toxic: "Flowers, leaves, seeds.",
+    effects: "Hallucination, paralysis, respiratory failure.",
+    aid: "Go to hospital immediately."
+  },
+  {
+    name: "Dieffenbachia",
+    image: "https://i.pinimg.com/1200x/08/65/57/0865577688ce65482c44be7b285eebc3.jpg",
+    info: "Common indoor plant causing severe mouth irritation.",
+    toxic: "Leaves and sap.",
+    effects: "Burning sensation, swelling, difficulty breathing.",
+    aid: "Rinse mouth, drink milk, seek medical attention."
+  },
+  {
+    name: "Rosary Pea",
+    image: "https://i.pinimg.com/1200x/ca/0b/bf/ca0bbf99ce11367ad127a64a3967edca.jpg",
+    info: "Contains abrin, one of the deadliest plant toxins.",
+    toxic: "Seeds.",
+    effects: "Organ failure, fatal if chewed.",
+    aid: "Emergency hospital treatment required."
+  },
+  {
+    name: "Castor Bean Plant",
+    image: "https://i.pinimg.com/736x/4b/e1/ba/4be1ba4d849bb8b34689073f3f894e0b.jpg",
+    info: "Produces ricin, extremely toxic even in small amounts.",
+    toxic: "Seeds.",
+    effects: "Severe vomiting, dehydration, organ failure.",
+    aid: "Immediate emergency medical help."
+  }
+];
+
+/* ========== SCREEN SWITCHING ========== */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+document.getElementById("browseBtn").onclick = () => {
+  loadPlants();
+  showScreen("browseScreen");
+};
+
+function goHome() { showScreen("homeScreen"); }
+function goBrowse() { showScreen("browseScreen"); }
+
+/* ========== LOAD PLANTS ========== */
+function loadPlants() {
+  const list = document.getElementById("plantList");
+  list.innerHTML = "";
+
+  plants.forEach((p, index) => {
+    const card = document.createElement("div");
+    card.className = "plant-card";
+    card.onclick = () => showDetails(index);
+
+    card.innerHTML = `
+      <img src="${p.image}" alt="Image of ${p.name}" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABYUlEQVR4Xu3XsQ3CMBAF0Zf0/5cN0FDUFxIr05oig3NbS1RyCBj3TDI7kKIhxCB3sI5Gucs5cjoxOYD65gis6pZeRAEIJ5zsxFrqAKeCzjuY4xXHzkwmo7aX6ixkmKuuNHYsYAGP82LPgAvFp8ZUBKbjsggD4HXBJgp7wa9u0JPFsKnzGWxZmf0RduCMsZ/HXXAUPI0Ck1vZEBtcHTAr3e8DqgHMoXAg/P6MqxsVXni4eWh05rq6ArtyTcidH8333AdxAi8uKXu95ACnHCqB6fINVi6zkRgZNpmjDoE7YQDdyCjTiMQuuLHfoalGoVYBoNvKcJsteUmsDWUpAJZKkd06Pq4jG3Ejj6inUeJ8V+RaHcRUW2KIiMzFxLpy0X58F3RrgPf63HgNbUsVTNff7kwh28ykVfoCkb0N7dxyzKkAAAAASUVORK5CYII=';">
+      <h3>${p.name}</h3>
+    `;
+
+    list.appendChild(card);
+  });
+  // Hide no results initially
+  document.getElementById("noResults").style.display = "none";
+}
+
+/* ========== SEARCH FUNCTION ========== */
+document.getElementById("searchBar").addEventListener("input", function () {
+  const value = this.value.toLowerCase();
+  const filtered = plants.filter(p => p.name.toLowerCase().includes(value));
+
+  const list = document.getElementById("plantList");
+  const noResults = document.getElementById("noResults");
+  list.innerHTML = "";
+
+  if (filtered.length === 0) {
+    noResults.style.display = "block";
+  } else {
+    noResults.style.display = "none";
+    filtered.forEach((p, index) => {
+      const card = document.createElement("div");
+      card.className = "plant-card";
+      card.onclick = () => showDetails(plants.indexOf(p));
+
+      card.innerHTML = `<img src="${p.image}" alt="Image of ${p.name}" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABYUlEQVR4Xu3XsQ3CMBAF0Zf0/5cN0FDUFxIr05oig3NbS1RyCBj3TDI7kKIhxCB3sI5Gucs5cjoxOYD65gis6pZeRAEIJ5zsxFrqAKeCzjuY4xXHzkwmo7aX6ixkmKuuNHYsYAGP82LPgAvFp8ZUBKbjsggD4HXBJgp7wa9u0JPFsKnzGWxZmf0RduCMsZ/HXXAUPI0Ck1vZEBtcHTAr3e8DqgHMoXAg/P6MqxsVXni4eWh05rq6ArtyTcidH8333AdxAi8uKXu95ACnHCqB6fINVi6zkRgZNpmjDoE7YQDdyCjTiMQuuLHfoalGoVYBoNvKcJsteUmsDWUpAJZKkd06Pq4jG3Ejj6inUeJ8V+RaHcRUW2KIiMzFxLpy0X58F3RrgPf63HgNbUsVTNff7kwh28ykVfoCkb0N7dxyzKkAAAAASUVORK5CYII=';"><h3>${p.name}</h3>`;
+      list.appendChild(card);
+    });
+  }
+});
+
+/* ========== SHOW PLANT DETAILS ========== */
+function showDetails(index) {
+  const p = plants[index];
+
+  document.getElementById("plantName").textContent = p.name;
+  document.getElementById("plantImage").src = p.image;
+  document.getElementById("plantInfo").textContent = p.info;
+  document.getElementById("plantToxic").textContent = p.toxic;
+  document.getElementById("plantEffects").textContent = p.effects;
+  document.getElementById("plantAid").textContent = p.aid;
+
+  showScreen("detailsScreen");
+}
+</script>
+
+</body>
+</html>
